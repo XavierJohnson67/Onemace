@@ -33,9 +33,6 @@ public final class MaceTicker {
     public static void onServerTick(MinecraftServer server) {
         MaceState state = OneMaceMod.STATE;
 
-        // Cheap check every single tick: is the mace we know is on the ground still there?
-        // This is what actually notices lava/void/cactus destruction, so it runs every tick
-        // rather than only on the slower inventory scan below.
         if (state.exists && state.groundEntityUuid != null) {
             pollGroundEntity(server, state);
         }
@@ -88,7 +85,7 @@ public final class MaceTicker {
 
             boolean changedHands = !chosen.getUUID().equals(state.holderUuid);
             state.holderUuid = chosen.getUUID();
-            state.holderName = chosen.getGameProfile().getName();
+            state.holderName = chosen.getName().getString();
             updateLastKnown(state, chosen);
             state.groundEntityUuid = null;
             state.missCounter = 0;
@@ -100,17 +97,15 @@ public final class MaceTicker {
             return;
         }
 
-        // Not in anyone's inventory right now.
         if (state.groundEntityUuid == null) {
             tryLocateGroundEntity(server, state);
         }
-        // If it IS tracked on the ground, the per-tick pollGroundEntity() above is handling it.
     }
 
     private static void becomeHolder(MinecraftServer server, MaceState state, ServerPlayer player, boolean freshlyForged) {
         state.exists = true;
         state.holderUuid = player.getUUID();
-        state.holderName = player.getGameProfile().getName();
+        state.holderName = player.getName().getString();
         updateLastKnown(state, player);
         state.groundEntityUuid = null;
         state.missCounter = 0;
@@ -125,7 +120,7 @@ public final class MaceTicker {
 
     private static void updateLastKnown(MaceState state, ServerPlayer player) {
         state.lastKnownHolderUuid = player.getUUID();
-        state.lastKnownDimension = player.level().dimension().location().toString();
+        state.lastKnownDimension = player.level().dimension().identifier().toString();
         state.lastKnownX = player.getX();
         state.lastKnownY = player.getY();
         state.lastKnownZ = player.getZ();
@@ -133,7 +128,6 @@ public final class MaceTicker {
 
     private static void tryLocateGroundEntity(MinecraftServer server, MaceState state) {
         if (state.lastKnownHolderUuid == null) {
-            // We have no idea where to even look - don't guess, just wait.
             return;
         }
         ServerLevel level = getLevelByKey(server, state.lastKnownDimension);
@@ -187,14 +181,9 @@ public final class MaceTicker {
         BlockPos pos = BlockPos.containing(state.groundX, state.groundY, state.groundZ);
         boolean chunkLoaded = level.hasChunkAt(pos);
         if (!chunkLoaded) {
-            // Can't tell right now - the chunk it was in has simply unloaded, not destroyed.
-            // Leave the state as-is; we'll check again once it's back in range.
             return;
         }
 
-        // Chunk is loaded, the entity we were tracking is gone, and the inventory scan
-        // would already have cleared groundEntityUuid if a player had picked it up.
-        // That only leaves destruction (lava, void, cactus, explosion, despawn timer, etc).
         declareDestroyed(server, state);
     }
 
@@ -209,7 +198,7 @@ public final class MaceTicker {
             return server.overworld();
         }
         for (ServerLevel level : server.getAllLevels()) {
-            if (level.dimension().location().toString().equals(dimensionKey)) {
+            if (level.dimension().identifier().toString().equals(dimensionKey)) {
                 return level;
             }
         }
@@ -218,13 +207,9 @@ public final class MaceTicker {
 
     private static boolean playerHasMace(ServerPlayer player) {
         Inventory inventory = player.getInventory();
-        for (ItemStack stack : inventory.items) {
-            if (OneMaceUtil.isMace(stack)) {
-                return true;
-            }
-        }
-        for (ItemStack stack : inventory.offhand) {
-            if (OneMaceUtil.isMace(stack)) {
+        int size = inventory.getContainerSize();
+        for (int i = 0; i < size; i++) {
+            if (OneMaceUtil.isMace(inventory.getItem(i))) {
                 return true;
             }
         }
@@ -233,16 +218,11 @@ public final class MaceTicker {
 
     private static void confiscate(ServerPlayer player) {
         Inventory inventory = player.getInventory();
+        int size = inventory.getContainerSize();
         boolean removedAny = false;
-        for (int i = 0; i < inventory.items.size(); i++) {
-            if (OneMaceUtil.isMace(inventory.items.get(i))) {
-                inventory.items.set(i, ItemStack.EMPTY);
-                removedAny = true;
-            }
-        }
-        for (int i = 0; i < inventory.offhand.size(); i++) {
-            if (OneMaceUtil.isMace(inventory.offhand.get(i))) {
-                inventory.offhand.set(i, ItemStack.EMPTY);
+        for (int i = 0; i < size; i++) {
+            if (OneMaceUtil.isMace(inventory.getItem(i))) {
+                inventory.setItem(i, ItemStack.EMPTY);
                 removedAny = true;
             }
         }
