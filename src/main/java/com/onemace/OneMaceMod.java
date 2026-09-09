@@ -41,7 +41,7 @@ public class OneMaceMod implements ModInitializer {
             }
             if (STATE.exists && player.getUUID().equals(STATE.holderUuid)) {
                 STATE.lastKnownHolderUuid = player.getUUID();
-                STATE.lastKnownDimension = player.level().dimension().location().toString();
+                STATE.lastKnownDimension = player.level().dimension().identifier().toString();
                 STATE.lastKnownX = player.getX();
                 STATE.lastKnownY = player.getY();
                 STATE.lastKnownZ = player.getZ();
