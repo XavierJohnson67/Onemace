@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "com.onemace.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"WaypointTransmitterMixin",
+		"SlotMixin",
+		"BundleItemMixin"
+	],
+	"injectors": {
+		"defaultRequire": 0
+	}
+}

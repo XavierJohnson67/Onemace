@@ -1,0 +1,27 @@
+{
+	"schemaVersion": 1,
+	"id": "onemace",
+	"version": "${version}",
+	"name": "One Mace",
+	"description": "Limits the server to a single Mace in existence at a time. Announces who forges or claims it, stops it being hidden in chests/barrels/bundles, forces the holder to always show on the locator bar, and re-opens crafting once it's destroyed.",
+	"authors": [
+		"You"
+	],
+	"license": "CC0-1.0",
+	"icon": "assets/onemace/icon.png",
+	"environment": "server",
+	"entrypoints": {
+		"main": [
+			"com.onemace.OneMaceMod"
+		]
+	},
+	"mixins": [
+		"onemace.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
